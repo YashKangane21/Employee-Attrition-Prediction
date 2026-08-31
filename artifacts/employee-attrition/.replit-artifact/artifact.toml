@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Employee Attrition Prediction System"
+description = "A professional HR analytics dashboard that trains and serves an employee attrition prediction model from the IBM HR dataset, with actionable dataset insights, model evaluation, and employee risk prediction."
+version = "1.0.0"
+id = "artifacts/employee-attrition"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20184
+
+[services.development]
+run = "pnpm --filter @workspace/employee-attrition run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/employee-attrition", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/employee-attrition/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20184"
+BASE_PATH = "/"

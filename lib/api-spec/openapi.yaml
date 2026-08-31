@@ -1,0 +1,337 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Employee attrition analytics and prediction API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: attrition
+    description: Employee attrition analytics and prediction operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /health:
+    get:
+      operationId: healthCheckAlias
+      tags: [health]
+      summary: Health check alias
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [attrition]
+      summary: Get dataset dashboard insights
+      description: Returns calculated summaries and grouped distributions from the IBM HR employee dataset.
+      responses:
+        "200":
+          description: Dashboard insights
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+        "500":
+          description: Dataset unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /model-metrics:
+    get:
+      operationId: getModelMetrics
+      tags: [attrition]
+      summary: Get trained model evaluation
+      description: Returns metrics calculated from the held-out stratified test split and Random Forest feature importances.
+      responses:
+        "200":
+          description: Model metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelMetrics"
+        "500":
+          description: Model unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /predict:
+    post:
+      operationId: predictAttrition
+      tags: [attrition]
+      summary: Predict employee attrition risk
+      description: Runs a new employee record through the saved preprocessing and Random Forest pipeline.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeInput"
+      responses:
+        "200":
+          description: Attrition prediction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prediction"
+        "400":
+          description: Invalid employee input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Model unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    CountItem:
+      type: object
+      properties:
+        label:
+          type: string
+        count:
+          type: number
+        percentage:
+          type: number
+      required: [label, count, percentage]
+    DashboardGroup:
+      type: object
+      properties:
+        label:
+          type: string
+        yes:
+          type: number
+        no:
+          type: number
+        total:
+          type: number
+        rate:
+          type: number
+      required: [label, yes, no, total, rate]
+    IncomePoint:
+      type: object
+      properties:
+        bucket:
+          type: string
+        yes:
+          type: number
+        no:
+          type: number
+      required: [bucket, yes, no]
+    Dashboard:
+      type: object
+      properties:
+        total_employees:
+          type: number
+        employees_left:
+          type: number
+        employees_stayed:
+          type: number
+        attrition_rate:
+          type: number
+        target_distribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountItem"
+        by_department:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardGroup"
+        by_job_role:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardGroup"
+        by_overtime:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardGroup"
+        income_by_attrition:
+          type: array
+          items:
+            $ref: "#/components/schemas/IncomePoint"
+      required:
+        - total_employees
+        - employees_left
+        - employees_stayed
+        - attrition_rate
+        - target_distribution
+        - by_department
+        - by_job_role
+        - by_overtime
+        - income_by_attrition
+    ModelComparison:
+      type: object
+      properties:
+        model:
+          type: string
+        accuracy:
+          type: number
+        precision:
+          type: number
+        recall:
+          type: number
+        f1_score:
+          type: number
+      required: [model, accuracy, precision, recall, f1_score]
+    FeatureImportance:
+      type: object
+      properties:
+        feature:
+          type: string
+        importance:
+          type: number
+      required: [feature, importance]
+    ModelMetrics:
+      type: object
+      properties:
+        model_used:
+          type: string
+        accuracy:
+          type: number
+        precision:
+          type: number
+        recall:
+          type: number
+        f1_score:
+          type: number
+        confusion_matrix:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+        comparison:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModelComparison"
+        feature_importance:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeatureImportance"
+        trained_at:
+          type: string
+      required:
+        - model_used
+        - accuracy
+        - precision
+        - recall
+        - f1_score
+        - confusion_matrix
+        - comparison
+        - feature_importance
+        - trained_at
+    EmployeeInput:
+      type: object
+      properties:
+        Age: { type: number, minimum: 18, maximum: 75 }
+        BusinessTravel: { type: string, enum: [Non-Travel, Travel_Rarely, Travel_Frequently] }
+        Department: { type: string, enum: [Sales, "Research & Development", "Human Resources"] }
+        DistanceFromHome: { type: number, minimum: 1, maximum: 100 }
+        Education: { type: number, minimum: 1, maximum: 5 }
+        EducationField: { type: string, enum: [Life Sciences, Medical, Marketing, Technical Degree, "Human Resources", Other] }
+        EnvironmentSatisfaction: { type: number, minimum: 1, maximum: 4 }
+        Gender: { type: string, enum: [Female, Male] }
+        JobInvolvement: { type: number, minimum: 1, maximum: 4 }
+        JobLevel: { type: number, minimum: 1, maximum: 5 }
+        JobRole: { type: string, enum: [Sales Executive, "Research Scientist", "Laboratory Technician", "Manufacturing Director", Healthcare Representative, Manager, Sales Representative, "Research Director", "Human Resources"] }
+        JobSatisfaction: { type: number, minimum: 1, maximum: 4 }
+        MaritalStatus: { type: string, enum: [Single, Married, Divorced] }
+        MonthlyIncome: { type: number, minimum: 100, maximum: 20000 }
+        NumCompaniesWorked: { type: number, minimum: 0, maximum: 20 }
+        OverTime: { type: string, enum: [Yes, No] }
+        PercentSalaryHike: { type: number, minimum: 10, maximum: 30 }
+        PerformanceRating: { type: number, minimum: 1, maximum: 5 }
+        RelationshipSatisfaction: { type: number, minimum: 1, maximum: 4 }
+        StockOptionLevel: { type: number, minimum: 0, maximum: 3 }
+        TotalWorkingYears: { type: number, minimum: 0, maximum: 50 }
+        TrainingTimesLastYear: { type: number, minimum: 0, maximum: 20 }
+        WorkLifeBalance: { type: number, minimum: 1, maximum: 4 }
+        YearsAtCompany: { type: number, minimum: 0, maximum: 50 }
+        YearsInCurrentRole: { type: number, minimum: 0, maximum: 20 }
+        YearsSinceLastPromotion: { type: number, minimum: 0, maximum: 20 }
+        YearsWithCurrManager: { type: number, minimum: 0, maximum: 20 }
+      required:
+        - Age
+        - BusinessTravel
+        - Department
+        - DistanceFromHome
+        - Education
+        - EducationField
+        - EnvironmentSatisfaction
+        - Gender
+        - JobInvolvement
+        - JobLevel
+        - JobRole
+        - JobSatisfaction
+        - MaritalStatus
+        - MonthlyIncome
+        - NumCompaniesWorked
+        - OverTime
+        - PercentSalaryHike
+        - PerformanceRating
+        - RelationshipSatisfaction
+        - StockOptionLevel
+        - TotalWorkingYears
+        - TrainingTimesLastYear
+        - WorkLifeBalance
+        - YearsAtCompany
+        - YearsInCurrentRole
+        - YearsSinceLastPromotion
+        - YearsWithCurrManager
+    Prediction:
+      type: object
+      properties:
+        prediction:
+          type: string
+          enum: [Yes, No]
+        attrition_probability:
+          type: number
+          minimum: 0
+          maximum: 1
+        risk_level:
+          type: string
+          enum: [Low, Medium, High]
+        model_used:
+          type: string
+      required: [prediction, attrition_probability, risk_level, model_used]
+

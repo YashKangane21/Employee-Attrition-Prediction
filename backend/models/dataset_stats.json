@@ -1,0 +1,149 @@
+{
+  "total_employees": 1470,
+  "employees_left": 237,
+  "employees_stayed": 1233,
+  "attrition_rate": 16.1,
+  "target_distribution": [
+    {
+      "label": "Stayed",
+      "count": 1233,
+      "percentage": 83.9
+    },
+    {
+      "label": "Left",
+      "count": 237,
+      "percentage": 16.1
+    }
+  ],
+  "by_department": [
+    {
+      "label": "Human Resources",
+      "yes": 12,
+      "no": 51,
+      "total": 63,
+      "rate": 19.0
+    },
+    {
+      "label": "Research & Development",
+      "yes": 133,
+      "no": 828,
+      "total": 961,
+      "rate": 13.8
+    },
+    {
+      "label": "Sales",
+      "yes": 92,
+      "no": 354,
+      "total": 446,
+      "rate": 20.6
+    }
+  ],
+  "by_job_role": [
+    {
+      "label": "Healthcare Representative",
+      "yes": 9,
+      "no": 122,
+      "total": 131,
+      "rate": 6.9
+    },
+    {
+      "label": "Human Resources",
+      "yes": 12,
+      "no": 40,
+      "total": 52,
+      "rate": 23.1
+    },
+    {
+      "label": "Laboratory Technician",
+      "yes": 62,
+      "no": 197,
+      "total": 259,
+      "rate": 23.9
+    },
+    {
+      "label": "Manager",
+      "yes": 5,
+      "no": 97,
+      "total": 102,
+      "rate": 4.9
+    },
+    {
+      "label": "Manufacturing Director",
+      "yes": 10,
+      "no": 135,
+      "total": 145,
+      "rate": 6.9
+    },
+    {
+      "label": "Research Director",
+      "yes": 2,
+      "no": 78,
+      "total": 80,
+      "rate": 2.5
+    },
+    {
+      "label": "Research Scientist",
+      "yes": 47,
+      "no": 245,
+      "total": 292,
+      "rate": 16.1
+    },
+    {
+      "label": "Sales Executive",
+      "yes": 57,
+      "no": 269,
+      "total": 326,
+      "rate": 17.5
+    },
+    {
+      "label": "Sales Representative",
+      "yes": 33,
+      "no": 50,
+      "total": 83,
+      "rate": 39.8
+    }
+  ],
+  "by_overtime": [
+    {
+      "label": "No",
+      "yes": 110,
+      "no": 944,
+      "total": 1054,
+      "rate": 10.4
+    },
+    {
+      "label": "Yes",
+      "yes": 127,
+      "no": 289,
+      "total": 416,
+      "rate": 30.5
+    }
+  ],
+  "income_by_attrition": [
+    {
+      "bucket": "Under 3k",
+      "yes": 113,
+      "no": 282
+    },
+    {
+      "bucket": "3k\u20136k",
+      "yes": 66,
+      "no": 453
+    },
+    {
+      "bucket": "6k\u20139k",
+      "yes": 24,
+      "no": 199
+    },
+    {
+      "bucket": "9k\u201312k",
+      "yes": 23,
+      "no": 115
+    },
+    {
+      "bucket": "12k+",
+      "yes": 11,
+      "no": 184
+    }
+  ]
+}
