@@ -8,6 +8,7 @@ from typing import Annotated, Literal
 
 import joblib
 import pandas as pd
+import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -89,6 +90,8 @@ def model_metrics() -> dict[str, object]:
 
 @app.post("/predict")
 @app.post("/api/predict")
+@app.post("/predict")
+@app.post("/api/predict")
 def predict(employee: EmployeeInput) -> dict[str, object]:
     if not MODEL_PATH.exists():
         raise HTTPException(
@@ -99,21 +102,51 @@ def predict(employee: EmployeeInput) -> dict[str, object]:
     # Load trained model
     model = joblib.load(MODEL_PATH)
 
-    # Convert input into DataFrame
+    # Convert UI input into DataFrame
     row = pd.DataFrame([employee.model_dump()])
 
-    # Make prediction
-    prediction = str(model.predict(row)[0])
-
-    # Get probability
-    probabilities = model.predict_proba(row)[0]
-    classes = list(model.classes_)
-
-    probability = float(
-        probabilities[classes.index("Yes")]
+    # Feature Engineering
+    row["CompanyExperienceRatio"] = np.where(
+        row["TotalWorkingYears"] > 0,
+        row["YearsAtCompany"] / row["TotalWorkingYears"],
+        0
     )
 
-    # Decide risk level
+    row["PromotionFrequency"] = np.where(
+        row["YearsAtCompany"] > 0,
+        row["YearsSinceLastPromotion"] / row["YearsAtCompany"],
+        0
+    )
+
+    row["IncomePerYearExperience"] = np.where(
+        row["TotalWorkingYears"] > 0,
+        row["MonthlyIncome"] / row["TotalWorkingYears"],
+        row["MonthlyIncome"]
+    )
+
+    row["SatisfactionScore"] = (
+        row["JobSatisfaction"]
+        + row["EnvironmentSatisfaction"]
+        + row["RelationshipSatisfaction"]
+        + row["WorkLifeBalance"]
+    ) / 4
+
+    row["RoleTenureRatio"] = np.where(
+        row["YearsAtCompany"] > 0,
+        row["YearsInCurrentRole"] / row["YearsAtCompany"],
+        0
+    )
+
+    # Keep exactly the features expected by the trained model
+    row = row[model.feature_names_in_]
+
+    # Prediction
+    prediction = int(model.predict(row)[0])
+
+    # Attrition probability
+    probability = float(model.predict_proba(row)[0][1])
+
+    # Risk level
     if probability >= 0.60:
         risk_level = "High"
     elif probability >= 0.35:
@@ -121,18 +154,9 @@ def predict(employee: EmployeeInput) -> dict[str, object]:
     else:
         risk_level = "Low"
 
-    # Get the actual selected model name
-    if METRICS_PATH.exists():
-        metrics = json.loads(
-            METRICS_PATH.read_text(encoding="utf-8")
-        )
-        model_used = metrics.get("model_used", "Unknown Model")
-    else:
-        model_used = "Unknown Model"
-
     return {
-        "prediction": prediction,
+        "prediction": "Yes" if prediction == 1 else "No",
         "attrition_probability": round(probability, 4),
         "risk_level": risk_level,
-        "model_used": model_used,
+        "model_used": "Logistic Regression",
     }
