@@ -1,12 +1,25 @@
 {
+    "model_used": "SVM",
     "selected_model": "SVM",
-    "selection_priority": [
-        "F1 Score",
-        "Recall",
-        "ROC-AUC"
+    "accuracy": 0.8197,
+    "precision": 0.4516,
+    "recall": 0.5957,
+    "f1_score": 0.5138,
+    "roc_auc": 0.8105,
+    "pr_auc": 0.5368,
+    "confusion_matrix": [
+        [
+            213,
+            34
+        ],
+        [
+            19,
+            28
+        ]
     ],
-    "models": {
-        "SVM": {
+    "comparison": [
+        {
+            "model": "SVM",
             "accuracy": 0.8197,
             "precision": 0.4516,
             "recall": 0.5957,
@@ -14,7 +27,8 @@
             "roc_auc": 0.8105,
             "pr_auc": 0.5368
         },
-        "Logistic Regression": {
+        {
+            "model": "Logistic Regression",
             "accuracy": 0.7721,
             "precision": 0.3864,
             "recall": 0.7234,
@@ -22,7 +36,8 @@
             "roc_auc": 0.8188,
             "pr_auc": 0.5535
         },
-        "Gradient Boosting": {
+        {
+            "model": "Gradient Boosting",
             "accuracy": 0.7959,
             "precision": 0.3818,
             "recall": 0.4468,
@@ -30,7 +45,8 @@
             "roc_auc": 0.7774,
             "pr_auc": 0.467
         },
-        "Random Forest": {
+        {
+            "model": "Random Forest",
             "accuracy": 0.8435,
             "precision": 0.5556,
             "recall": 0.1064,
@@ -38,5 +54,179 @@
             "roc_auc": 0.8105,
             "pr_auc": 0.4442
         }
-    }
+    ],
+    "feature_importance": [
+        {
+            "feature": "OverTime",
+            "importance": 0.134307
+        },
+        {
+            "feature": "NumCompaniesWorked",
+            "importance": 0.047595
+        },
+        {
+            "feature": "StockOptionLevel",
+            "importance": 0.032592
+        },
+        {
+            "feature": "Department",
+            "importance": 0.031399
+        },
+        {
+            "feature": "BusinessTravel",
+            "importance": 0.021206
+        },
+        {
+            "feature": "EnvironmentSatisfaction",
+            "importance": 0.016549
+        },
+        {
+            "feature": "RoleTenureRatio",
+            "importance": 0.013184
+        },
+        {
+            "feature": "Age",
+            "importance": 0.013088
+        },
+        {
+            "feature": "YearsSinceLastPromotion",
+            "importance": 0.011026
+        },
+        {
+            "feature": "JobInvolvement",
+            "importance": 0.009394
+        },
+        {
+            "feature": "DistanceFromHome",
+            "importance": 0.007853
+        },
+        {
+            "feature": "YearsWithCurrManager",
+            "importance": 0.005756
+        },
+        {
+            "feature": "TrainingTimesLastYear",
+            "importance": 0.004465
+        },
+        {
+            "feature": "WorkLifeBalance",
+            "importance": 0.002203
+        },
+        {
+            "feature": "SatisfactionScore",
+            "importance": 0.001575
+        },
+        {
+            "feature": "Gender",
+            "importance": 0.000535
+        },
+        {
+            "feature": "PromotionFrequency",
+            "importance": -0.001955
+        },
+        {
+            "feature": "MaritalStatus",
+            "importance": -0.003926
+        },
+        {
+            "feature": "YearsInCurrentRole",
+            "importance": -0.006061
+        },
+        {
+            "feature": "RelationshipSatisfaction",
+            "importance": -0.006787
+        },
+        {
+            "feature": "MonthlyIncome",
+            "importance": -0.010344
+        },
+        {
+            "feature": "PercentSalaryHike",
+            "importance": -0.01079
+        },
+        {
+            "feature": "PerformanceRating",
+            "importance": -0.016617
+        },
+        {
+            "feature": "JobSatisfaction",
+            "importance": -0.018044
+        },
+        {
+            "feature": "IncomePerYearExperience",
+            "importance": -0.018884
+        },
+        {
+            "feature": "JobLevel",
+            "importance": -0.019097
+        },
+        {
+            "feature": "JobRole",
+            "importance": -0.01993
+        },
+        {
+            "feature": "YearsAtCompany",
+            "importance": -0.021333
+        },
+        {
+            "feature": "Education",
+            "importance": -0.022598
+        },
+        {
+            "feature": "CompanyExperienceRatio",
+            "importance": -0.023364
+        },
+        {
+            "feature": "TotalWorkingYears",
+            "importance": -0.024319
+        },
+        {
+            "feature": "EducationField",
+            "importance": -0.028095
+        }
+    ],
+    "selection_priority": [
+        "F1 Score",
+        "Recall",
+        "ROC-AUC"
+    ],
+    "selection_criterion": "Highest F1-score; Recall and ROC-AUC used as tie-breakers.",
+    "feature_count": 32,
+    "numeric_features": [
+        "Age",
+        "DistanceFromHome",
+        "Education",
+        "EnvironmentSatisfaction",
+        "JobInvolvement",
+        "JobLevel",
+        "JobSatisfaction",
+        "MonthlyIncome",
+        "NumCompaniesWorked",
+        "PercentSalaryHike",
+        "PerformanceRating",
+        "RelationshipSatisfaction",
+        "StockOptionLevel",
+        "TotalWorkingYears",
+        "TrainingTimesLastYear",
+        "WorkLifeBalance",
+        "YearsAtCompany",
+        "YearsInCurrentRole",
+        "YearsSinceLastPromotion",
+        "YearsWithCurrManager",
+        "CompanyExperienceRatio",
+        "PromotionFrequency",
+        "IncomePerYearExperience",
+        "SatisfactionScore",
+        "RoleTenureRatio"
+    ],
+    "categorical_features": [
+        "BusinessTravel",
+        "Department",
+        "EducationField",
+        "Gender",
+        "JobRole",
+        "MaritalStatus",
+        "OverTime"
+    ],
+    "trained_at": "2026-09-11T06:02:20.436824+00:00"
 }
