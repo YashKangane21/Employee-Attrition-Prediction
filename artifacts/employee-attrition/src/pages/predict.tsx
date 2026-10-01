@@ -24,6 +24,9 @@ import {
   type Prediction,
 } from '@workspace/api-client-react';
 
+import { BulkPredictPanel } from '@/components/bulk-predict-panel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 /* ============================================================
    INITIAL FORM
@@ -506,19 +509,18 @@ export default function Predict() {
       <header className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
         <div className="animate-rise-in">
           <p className="label-kicker">
-            02 / Single profile
+            02 / Predict attrition
           </p>
 
           <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] md:text-4xl">
-            Read one profile.
+            Score one profile or a whole CSV.
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Enter the employee profile to explore an
-            attrition-risk signal. The form contains the
-            27 original input features used by the
-            prediction API. Five engineered features are
-            calculated automatically by the backend.
+            Use the existing single-employee form, or upload a
+            Google Form CSV to rate and score multiple employees
+            with the same trained model. Five engineered features
+            are calculated automatically by the backend.
           </p>
         </div>
 
@@ -537,6 +539,21 @@ export default function Predict() {
           CONTENT
           ====================================================== */}
 
+      <Tabs defaultValue="single" className="space-y-6">
+        <TabsList data-testid="tabs-predict-mode">
+          <TabsTrigger value="single" data-testid="tab-single-employee">
+            Single employee
+          </TabsTrigger>
+          <TabsTrigger value="csv" data-testid="tab-upload-csv">
+            Upload CSV
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="csv">
+          <BulkPredictPanel />
+        </TabsContent>
+
+        <TabsContent value="single">
       <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
 
         {/* ====================================================
@@ -802,6 +819,8 @@ export default function Predict() {
         </div>
 
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

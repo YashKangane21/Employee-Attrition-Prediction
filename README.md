@@ -2,9 +2,6 @@
 
 A machine learning based employee attrition prediction system built using the IBM HR Employee Attrition dataset. The project combines data preprocessing, feature engineering, machine learning model comparison, a FastAPI backend, and a React/Vite frontend dashboard.
 
-The system is designed as an academic AIML course project as well as a working local web application.
-
----
 
 ## Project Overview
 

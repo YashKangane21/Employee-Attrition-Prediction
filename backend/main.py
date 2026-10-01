@@ -10,8 +10,10 @@ import joblib
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, field_validator
 
 
 # ============================================================
@@ -48,6 +50,54 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _friendly_validation_message(exc: RequestValidationError) -> str:
+    missing_columns: list[str] = []
+    other_errors: list[str] = []
+
+    for error in exc.errors():
+        loc = [str(part) for part in error.get("loc", []) if part != "body"]
+        field = loc[-1] if loc else "input"
+        error_type = error.get("type", "")
+        if error_type in {"missing", "value_error.missing"}:
+            missing_columns.append(field)
+            continue
+
+        employee_index = None
+        if "employees" in loc:
+            try:
+                employee_index = int(loc[loc.index("employees") + 1]) + 1
+            except (ValueError, IndexError):
+                employee_index = None
+
+        prefix = f"Row {employee_index}: " if employee_index else ""
+        other_errors.append(f"{prefix}{field} is invalid.")
+
+    if missing_columns:
+        unique_missing = list(dict.fromkeys(missing_columns))
+        return "Missing required columns:\n" + "\n".join(
+            f"* {name}" for name in unique_missing
+        )
+
+    if other_errors:
+        unique_errors = list(dict.fromkeys(other_errors))
+        return "Please correct the following issues:\n" + "\n".join(
+            f"* {item}" for item in unique_errors[:12]
+        )
+
+    return "The submitted employee data is invalid. Please review the values and try again."
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    _request: object,
+    exc: RequestValidationError,
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=422,
+        content={"error": _friendly_validation_message(exc)},
+    )
 
 
 # ============================================================
@@ -143,6 +193,25 @@ class EmployeeInput(BaseModel):
     YearsSinceLastPromotion: Annotated[int, Field(ge=0, le=20)]
 
     YearsWithCurrManager: Annotated[int, Field(ge=0, le=20)]
+
+
+class BulkEmployeeRecord(EmployeeInput):
+    EmployeeName: Annotated[str, Field(min_length=1, max_length=200)]
+    EmployeeID: Annotated[str, Field(min_length=1, max_length=100)]
+
+    @field_validator("EmployeeName", "EmployeeID", mode="before")
+    @classmethod
+    def strip_identifier(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+
+class BulkPredictRequest(BaseModel):
+    employees: Annotated[
+        list[BulkEmployeeRecord],
+        Field(min_length=1, max_length=500),
+    ]
 
 
 # ============================================================
@@ -247,6 +316,125 @@ def engineer_features(row: pd.DataFrame) -> pd.DataFrame:
     return row
 
 
+ENGINEERED_FIELDS = [
+    "CompanyExperienceRatio",
+    "PromotionFrequency",
+    "IncomePerYearExperience",
+    "SatisfactionScore",
+    "RoleTenureRatio",
+]
+
+
+def load_trained_model():
+    if not MODEL_PATH.exists():
+        raise HTTPException(
+            status_code=503,
+            detail="Train the model before requesting predictions.",
+        )
+
+    try:
+        return joblib.load(MODEL_PATH)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="The trained model could not be loaded. Please try again later.",
+        ) from exc
+
+
+def get_model_used() -> str:
+    model_used = "Unknown Model"
+
+    if METRICS_PATH.exists():
+        try:
+            metrics = json.loads(METRICS_PATH.read_text(encoding="utf-8"))
+            model_used = metrics.get("model_used", "Unknown Model")
+        except Exception:
+            pass
+
+    return model_used
+
+
+def risk_from_probability(probability: float) -> str:
+    if probability >= 0.60:
+        return "High"
+    if probability >= 0.35:
+        return "Medium"
+    return "Low"
+
+
+def normalize_prediction_label(prediction: object) -> str:
+    if isinstance(prediction, str):
+        return "Yes" if prediction == "Yes" else "No"
+    return "Yes" if int(prediction) == 1 else "No"
+
+
+def yes_probability(model, probabilities: np.ndarray) -> float:
+    classes = list(model.classes_)
+    if "Yes" in classes:
+        return float(probabilities[classes.index("Yes")])
+    return float(probabilities[-1])
+
+
+def score_model_inputs(records: list[dict[str, object]]) -> list[dict[str, object]]:
+    """Score one or more employees with the existing pipeline.
+
+    `records` must contain only the original model input features.
+    EmployeeName and EmployeeID must never be included.
+    """
+
+    model = load_trained_model()
+    model_used = get_model_used()
+    frame = pd.DataFrame(records)
+    frame = engineer_features(frame)
+
+    if not hasattr(model, "feature_names_in_"):
+        raise HTTPException(
+            status_code=500,
+            detail="The trained model does not contain feature metadata.",
+        )
+
+    expected_features = list(model.feature_names_in_)
+    missing_features = [
+        feature for feature in expected_features if feature not in frame.columns
+    ]
+    if missing_features:
+        raise HTTPException(
+            status_code=500,
+            detail="The prediction pipeline is missing required model features.",
+        )
+
+    model_frame = frame[expected_features]
+
+    try:
+        predictions = model.predict(model_frame)
+        probability_rows = model.predict_proba(model_frame)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Prediction could not be completed. Please review the employee data and try again.",
+        ) from exc
+
+    results: list[dict[str, object]] = []
+    for index, record in enumerate(records):
+        probability = round(yes_probability(model, probability_rows[index]), 4)
+        prediction_label = normalize_prediction_label(predictions[index])
+        engineered = {
+            field: float(frame.iloc[index][field]) for field in ENGINEERED_FIELDS
+        }
+        results.append(
+            {
+                **record,
+                **engineered,
+                "prediction": prediction_label,
+                "attrition_probability": probability,
+                "risk_level": risk_from_probability(probability),
+                "model_used": model_used,
+            }
+        )
+
+    return results
+
+
 # ============================================================
 # PREDICTION
 # ============================================================
@@ -254,179 +442,51 @@ def engineer_features(row: pd.DataFrame) -> pd.DataFrame:
 @app.post("/predict")
 @app.post("/api/predict")
 def predict(employee: EmployeeInput) -> dict[str, object]:
-
-    # --------------------------------------------------------
-    # Check model
-    # --------------------------------------------------------
-
-    if not MODEL_PATH.exists():
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "Train the model before requesting predictions."
-            ),
-        )
-
-    # --------------------------------------------------------
-    # Load trained pipeline
-    # --------------------------------------------------------
-
-    try:
-        model = joblib.load(MODEL_PATH)
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Could not load trained model: {exc}",
-        ) from exc
-
-    # --------------------------------------------------------
-    # Convert request to DataFrame
-    # --------------------------------------------------------
-
-    row = pd.DataFrame(
-        [employee.model_dump()]
-    )
-
-    # --------------------------------------------------------
-    # Apply feature engineering
-    # --------------------------------------------------------
-
-    row = engineer_features(row)
-
-    # --------------------------------------------------------
-    # Make sure the input matches training features
-    # --------------------------------------------------------
-
-    if not hasattr(model, "feature_names_in_"):
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "The trained model does not contain feature metadata."
-            ),
-        )
-
-    expected_features = list(
-        model.feature_names_in_
-    )
-
-    missing_features = [
-        feature
-        for feature in expected_features
-        if feature not in row.columns
-    ]
-
-    if missing_features:
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "Missing features required by the model: "
-                + ", ".join(missing_features)
-            ),
-        )
-
-    row = row[expected_features]
-
-    # --------------------------------------------------------
-    # Prediction
-    # --------------------------------------------------------
-
-    try:
-        prediction = model.predict(row)[0]
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Prediction failed: {exc}",
-        ) from exc
-
-    # --------------------------------------------------------
-    # Prediction probability
-    # --------------------------------------------------------
-
-    try:
-        probabilities = model.predict_proba(row)[0]
-
-        classes = list(model.classes_)
-
-        if "Yes" in classes:
-            yes_index = classes.index("Yes")
-            probability = float(
-                probabilities[yes_index]
-            )
-        else:
-            # Fallback in case the classifier uses numeric labels.
-            probability = float(
-                probabilities[-1]
-            )
-
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "The trained model does not provide "
-                f"prediction probabilities: {exc}"
-            ),
-        ) from exc
-
-    # --------------------------------------------------------
-    # Normalize prediction
-    # --------------------------------------------------------
-
-    if isinstance(prediction, str):
-        prediction_label = prediction
-    else:
-        prediction_label = (
-            "Yes"
-            if int(prediction) == 1
-            else "No"
-        )
-
-    # --------------------------------------------------------
-    # Risk level
-    # --------------------------------------------------------
-
-    if probability >= 0.60:
-        risk_level = "High"
-    elif probability >= 0.35:
-        risk_level = "Medium"
-    else:
-        risk_level = "Low"
-
-    # --------------------------------------------------------
-    # Get actual model name
-    # --------------------------------------------------------
-
-    model_used = "Unknown Model"
-
-    if METRICS_PATH.exists():
-        try:
-            metrics = json.loads(
-                METRICS_PATH.read_text(
-                    encoding="utf-8"
-                )
-            )
-
-            model_used = metrics.get(
-                "model_used",
-                "Unknown Model",
-            )
-
-        except Exception:
-            pass
-
-    # --------------------------------------------------------
-    # Response
-    # --------------------------------------------------------
-
+    scored = score_model_inputs([employee.model_dump()])[0]
     return {
-        "prediction": (
-            "Yes"
-            if prediction_label == "Yes"
-            else "No"
-        ),
-        "attrition_probability": round(
-            probability,
-            4,
-        ),
-        "risk_level": risk_level,
-        "model_used": model_used,
+        "prediction": scored["prediction"],
+        "attrition_probability": scored["attrition_probability"],
+        "risk_level": scored["risk_level"],
+        "model_used": scored["model_used"],
     }
+
+
+@app.post("/predict-bulk")
+@app.post("/api/predict-bulk")
+def predict_bulk(payload: BulkPredictRequest) -> dict[str, object]:
+    seen_ids: dict[str, int] = {}
+    duplicates: list[str] = []
+    for index, employee in enumerate(payload.employees):
+        employee_id = employee.EmployeeID
+        if employee_id in seen_ids:
+            duplicates.append(employee_id)
+        else:
+            seen_ids[employee_id] = index
+
+    if duplicates:
+        unique_duplicates = list(dict.fromkeys(duplicates))
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Duplicate employee IDs are not allowed: "
+                + ", ".join(unique_duplicates)
+            ),
+        )
+
+    model_records = [
+        employee.model_dump(exclude={"EmployeeName", "EmployeeID"})
+        for employee in payload.employees
+    ]
+    scored_rows = score_model_inputs(model_records)
+
+    results = []
+    for employee, scored in zip(payload.employees, scored_rows):
+        results.append(
+            {
+                "EmployeeName": employee.EmployeeName,
+                "EmployeeID": employee.EmployeeID,
+                **scored,
+            }
+        )
+
+    return {"results": results}

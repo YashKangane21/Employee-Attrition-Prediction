@@ -262,7 +262,7 @@ export default function Insights() {
               </div>
 
 
-              <div className="flex items-center gap-2 text-xs text-primary-foreground/55">
+              {/* <div className="flex items-center gap-2 text-xs text-primary-foreground/55">
 
                 <CalendarDays size={14} />
 
@@ -271,7 +271,7 @@ export default function Insights() {
                   metrics.trained_at,
                 )}
 
-              </div>
+              </div> */}
 
             </div>
 

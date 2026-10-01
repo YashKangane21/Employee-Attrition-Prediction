@@ -108,6 +108,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /predict-bulk:
+    post:
+      operationId: predictAttritionBulk
+      tags: [attrition]
+      summary: Predict attrition risk for multiple employees
+      description: Runs multiple employee records through the same saved preprocessing and trained model used by single prediction. EmployeeName and EmployeeID are metadata only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkPredictRequest"
+      responses:
+        "200":
+          description: Bulk attrition predictions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkPredictResponse"
+        "400":
+          description: Invalid bulk employee input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Model unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -318,6 +349,47 @@ components:
         - YearsInCurrentRole
         - YearsSinceLastPromotion
         - YearsWithCurrManager
+    BulkEmployeeRecord:
+      allOf:
+        - $ref: "#/components/schemas/EmployeeInput"
+        - type: object
+          properties:
+            EmployeeName:
+              type: string
+              minLength: 1
+            EmployeeID:
+              type: string
+              minLength: 1
+          required: [EmployeeName, EmployeeID]
+    BulkPredictRequest:
+      type: object
+      properties:
+        employees:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: "#/components/schemas/BulkEmployeeRecord"
+      required: [employees]
+    BulkEmployeeResult:
+      allOf:
+        - $ref: "#/components/schemas/BulkEmployeeRecord"
+        - $ref: "#/components/schemas/Prediction"
+        - type: object
+          properties:
+            CompanyExperienceRatio: { type: number }
+            PromotionFrequency: { type: number }
+            IncomePerYearExperience: { type: number }
+            SatisfactionScore: { type: number }
+            RoleTenureRatio: { type: number }
+    BulkPredictResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/BulkEmployeeResult"
+      required: [results]
     Prediction:
       type: object
       properties:
