@@ -1,6 +1,0 @@
-Timestamp,Email Address,EmployeeName,EmployeeID,Age,BusinessTravel,Department,DistanceFromHome,Education,EducationField,EnvironmentSatisfaction,Gender,JobInvolvement,JobLevel,JobRole,JobSatisfaction,MaritalStatus,MonthlyIncome,NumCompaniesWorked,OverTime,PercentSalaryHike,RelationshipSatisfaction,StockOptionLevel,TotalWorkingYears,TrainingTimesLastYear,WorkLifeBalance,YearsAtCompany,YearsInCurrentRole,YearsSinceLastPromotion,YearsWithCurrManager
-2026-03-01 09:12:00,rahul.sharma@example.com,Rahul Sharma,EMP001,34,Travel_Rarely,Sales,8,3,Marketing,2,Male,3,3,Manager,3,Married,7200,2,No,14,3,1,12,3,3,6,3,1,4
-2026-03-01 09:18:00,priya.patil@example.com,Priya Patil,EMP002,29,Travel_Frequently,Research & Development,12,4,Life Sciences,1,Female,2,2,Research Scientist,2,Single,4100,1,Yes,11,2,0,6,2,2,2,1,1,1
-2026-03-01 09:24:00,amit.shah@example.com,Amit Shah,EMP003,41,Non-Travel,Research & Development,3,4,Medical,4,Male,3,4,Healthcare Representative,4,Married,9800,4,No,16,4,2,18,3,3,10,6,2,7
-2026-03-01 09:31:00,neha.verma@example.com,Neha Verma,EMP004,26,Travel_Rarely,Human Resources,18,2,Human Resources,2,Female,2,1,Human Resources,2,Single,2700,1,Yes,12,1,0,4,2,2,1,1,0,1
-2026-03-01 09:40:00,vikram.rao@example.com,Vikram Rao,EMP005,38,Travel_Rarely,Sales,5,3,Technical Degree,3,Male,3,2,Sales Executive,3,Divorced,5600,3,No,13,3,1,14,3,3,8,4,1,5

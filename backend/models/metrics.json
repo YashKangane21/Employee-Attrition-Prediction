@@ -5,8 +5,12 @@
     "precision": 0.4516,
     "recall": 0.5957,
     "f1_score": 0.5138,
-    "roc_auc": 0.8105,
-    "pr_auc": 0.5368,
+    "cv_metrics": {
+        "accuracy": 0.8384,
+        "precision": 0.5056,
+        "recall": 0.6,
+        "f1_score": 0.5458
+    },
     "confusion_matrix": [
         [
             213,
@@ -23,36 +27,49 @@
             "accuracy": 0.8197,
             "precision": 0.4516,
             "recall": 0.5957,
-            "f1_score": 0.5138,
-            "roc_auc": 0.8105,
-            "pr_auc": 0.5368
+            "f1_score": 0.5138
         },
         {
             "model": "Logistic Regression",
             "accuracy": 0.7721,
             "precision": 0.3864,
             "recall": 0.7234,
-            "f1_score": 0.5037,
-            "roc_auc": 0.8188,
-            "pr_auc": 0.5535
+            "f1_score": 0.5037
         },
         {
             "model": "Gradient Boosting",
             "accuracy": 0.7959,
             "precision": 0.3818,
             "recall": 0.4468,
-            "f1_score": 0.4118,
-            "roc_auc": 0.7774,
-            "pr_auc": 0.467
+            "f1_score": 0.4118
+        },
+        {
+            "model": "Gaussian Naive Bayes",
+            "accuracy": 0.6871,
+            "precision": 0.2897,
+            "recall": 0.6596,
+            "f1_score": 0.4026
+        },
+        {
+            "model": "Decision Tree",
+            "accuracy": 0.7619,
+            "precision": 0.2444,
+            "recall": 0.234,
+            "f1_score": 0.2391
         },
         {
             "model": "Random Forest",
             "accuracy": 0.8435,
             "precision": 0.5556,
             "recall": 0.1064,
-            "f1_score": 0.1786,
-            "roc_auc": 0.8105,
-            "pr_auc": 0.4442
+            "f1_score": 0.1786
+        },
+        {
+            "model": "KNN",
+            "accuracy": 0.8231,
+            "precision": 0.3077,
+            "recall": 0.0851,
+            "f1_score": 0.1333
         }
     ],
     "feature_importance": [
@@ -185,12 +202,7 @@
             "importance": -0.028095
         }
     ],
-    "selection_priority": [
-        "F1 Score",
-        "Recall",
-        "ROC-AUC"
-    ],
-    "selection_criterion": "Highest F1-score; Recall and ROC-AUC used as tie-breakers.",
+    "selection_criterion": "Highest cross-validation F1 score",
     "feature_count": 32,
     "numeric_features": [
         "Age",
@@ -228,5 +240,5 @@
         "MaritalStatus",
         "OverTime"
     ],
-    "trained_at": "2026-09-11T06:02:20.436824+00:00"
+    "trained_at": "2026-10-19T06:52:38.542752+00:00"
 }
