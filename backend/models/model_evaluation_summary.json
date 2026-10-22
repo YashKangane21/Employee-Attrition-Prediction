@@ -1,0 +1,31 @@
+{
+  "selection_method": "5-fold StratifiedKFold on training data; mean F1-score primary",
+  "selected_model": "SVM",
+  "selected_model_cv_metrics": {
+    "Accuracy": 0.8384132708258203,
+    "Precision": 0.5056172013298216,
+    "Recall": 0.6,
+    "F1 Score": 0.5458261037208405,
+    "ROC-AUC": 0.8115982156591294,
+    "PR-AUC": 0.5952876229440824
+  },
+  "selected_model_test_metrics": {
+    "Accuracy": 0.8197278911564626,
+    "Precision": 0.45161290322580644,
+    "Recall": 0.5957446808510638,
+    "F1 Score": 0.5137614678899083,
+    "ROC-AUC": 0.8104918597639762,
+    "PR-AUC": 0.5367745923408891
+  },
+  "models_compared": [
+    "Logistic Regression",
+    "Random Forest",
+    "SVM",
+    "Gradient Boosting",
+    "K-Nearest Neighbors",
+    "Decision Tree",
+    "Extra Trees"
+  ],
+  "random_state": 42,
+  "test_size": 0.2
+}
