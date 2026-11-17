@@ -488,5 +488,5 @@ def predict_bulk(payload: BulkPredictRequest) -> dict[str, object]:
                 **scored,
             }
         )
-
+        
     return {"results": results}
