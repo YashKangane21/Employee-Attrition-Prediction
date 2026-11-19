@@ -23,6 +23,7 @@ import {
   predictBulkEmployees,
   type BulkPredictionResult,
 } from '@/lib/bulk-predict-api';
+import { BulkRetentionDashboard } from '@/components/bulk-retention-dashboard';
 
 type BulkStep = 'upload' | 'rate' | 'review' | 'results';
 
@@ -598,6 +599,11 @@ export function BulkPredictPanel() {
               </button>
             </div>
           </div>
+
+          {/* ====================================================
+              BULK EMPLOYEE RETENTION RECOMMENDATIONS & WHAT-IF ANALYSIS
+              ==================================================== */}
+          <BulkRetentionDashboard results={results} />
         </section>
       )}
     </div>

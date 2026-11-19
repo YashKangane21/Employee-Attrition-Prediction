@@ -490,3 +490,71 @@ def predict_bulk(payload: BulkPredictRequest) -> dict[str, object]:
         )
         
     return {"results": results}
+
+
+# ============================================================
+# RETENTION RECOMMENDATIONS & WHAT-IF ANALYSIS
+# ============================================================
+
+try:
+    from backend.recommendations import (
+        RetentionRecommendationsResponse,
+        SimulationSummary,
+        SimulateCombinedRequest,
+        BulkRetentionRecommendationsResponse,
+        build_recommendations_and_simulations,
+        simulate_selected_recommendations,
+        build_bulk_retention_recommendations,
+    )
+except ModuleNotFoundError:
+    from recommendations import (
+        RetentionRecommendationsResponse,
+        SimulationSummary,
+        SimulateCombinedRequest,
+        BulkRetentionRecommendationsResponse,
+        build_recommendations_and_simulations,
+        simulate_selected_recommendations,
+        build_bulk_retention_recommendations,
+    )
+
+
+
+@app.post("/recommendations", response_model=RetentionRecommendationsResponse)
+@app.post("/api/recommendations", response_model=RetentionRecommendationsResponse)
+def get_recommendations(employee: EmployeeInput) -> RetentionRecommendationsResponse:
+    model = load_trained_model()
+    model_used = get_model_used()
+    return build_recommendations_and_simulations(
+        employee.model_dump(),
+        score_model_inputs,
+        model,
+        model_used,
+    )
+
+
+@app.post("/recommendations/simulate", response_model=SimulationSummary)
+@app.post("/api/recommendations/simulate", response_model=SimulationSummary)
+def simulate_recommendations(payload: SimulateCombinedRequest) -> SimulationSummary:
+    validated_employee = EmployeeInput.model_validate(payload.employee)
+    model = load_trained_model()
+    return simulate_selected_recommendations(
+        validated_employee.model_dump(),
+        payload.selected_recommendation_ids,
+        score_model_inputs,
+        model,
+    )
+
+
+@app.post("/recommendations/bulk", response_model=BulkRetentionRecommendationsResponse)
+@app.post("/api/recommendations/bulk", response_model=BulkRetentionRecommendationsResponse)
+def get_bulk_recommendations(payload: BulkPredictRequest) -> BulkRetentionRecommendationsResponse:
+    model = load_trained_model()
+    model_used = get_model_used()
+    employees_dicts = [emp.model_dump() for emp in payload.employees]
+    return build_bulk_retention_recommendations(
+        employees_dicts,
+        score_model_inputs,
+        model,
+        model_used,
+    )
+

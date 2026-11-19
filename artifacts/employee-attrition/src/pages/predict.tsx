@@ -25,6 +25,7 @@ import {
 } from '@workspace/api-client-react';
 
 import { BulkPredictPanel } from '@/components/bulk-predict-panel';
+import { RetentionRecommendations } from '@/components/retention-recommendations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
@@ -819,6 +820,16 @@ export default function Predict() {
         </div>
 
       </div>
+
+      {/* ====================================================
+          SMART EMPLOYEE RETENTION RECOMMENDATIONS
+          ==================================================== */}
+      {result && (
+        <RetentionRecommendations
+          employee={form}
+          initialPrediction={result}
+        />
+      )}
         </TabsContent>
       </Tabs>
     </div>
