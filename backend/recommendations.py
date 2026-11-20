@@ -619,4 +619,3 @@ def build_bulk_retention_recommendations(
         probability_notes=prob_notes,
         disclaimer=DISCLAIMER_TEXT,
     )
-
